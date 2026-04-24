@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luxé Admin — Pedidos</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C96A;
+    --dark: #0E0E0E;
+    --surface: #1A1A1A;
+    --card: #222222;
+    --border: #333;
+    --text: #F5F5F0;
+    --muted: #888;
+    --green: #2ECC71;
+    --yellow: #F1C40F;
+    --red: #E74C3C;
+    --blue: #3498DB;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; }
+
+  /* ── Login ── */
+  #login-screen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px;
+  }
+  .login-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 400px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.6);
+  }
+  .login-logo { text-align: center; margin-bottom: 32px; }
+  .login-logo h1 { font-size: 28px; letter-spacing: 4px; color: var(--gold); font-weight: 300; }
+  .login-logo p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .login-field { margin-bottom: 16px; }
+  .login-field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase; }
+  .login-field input {
+    width: 100%; padding: 12px 16px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px; color: var(--text);
+    font-size: 15px; outline: none; transition: border-color .2s;
+  }
+  .login-field input:focus { border-color: var(--gold); }
+  .login-btn {
+    width: 100%; padding: 14px; background: var(--gold); color: #000;
+    border: none; border-radius: 8px; font-size: 15px; font-weight: 700;
+    cursor: pointer; margin-top: 8px; letter-spacing: 1px; transition: background .2s;
+  }
+  .login-btn:hover { background: var(--gold-light); }
+  .login-err { color: var(--red); font-size: 13px; margin-top: 12px; text-align: center; display: none; }
+
+  /* ── App ── */
+  #app { display: none; }
+
+  header {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 24px; display: flex; align-items: center; justify-content: space-between;
+    height: 60px; position: sticky; top: 0; z-index: 100;
+  }
+  .header-brand { font-size: 18px; letter-spacing: 3px; color: var(--gold); font-weight: 300; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .user-email { font-size: 12px; color: var(--muted); }
+  .logout-btn {
+    padding: 6px 14px; background: transparent; border: 1px solid var(--border);
+    color: var(--muted); border-radius: 6px; font-size: 12px; cursor: pointer;
+    transition: all .2s;
+  }
+  .logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+  .main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+  /* ── Stats ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 24px;
+  }
+  .stat-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+  .stat-value { font-size: 32px; font-weight: 700; color: var(--text); line-height: 1; }
+  .stat-value.gold { color: var(--gold); }
+  .stat-value.green { color: var(--green); }
+  .stat-value.yellow { color: var(--yellow); }
+
+  /* ── Filters ── */
+  .filters { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .filter-btn {
+    padding: 7px 18px; border-radius: 20px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-size: 13px; cursor: pointer;
+    transition: all .2s;
+  }
+  .filter-btn.active, .filter-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,.08); }
+  .search-box {
+    margin-left: auto; padding: 7px 14px; background: var(--card);
+    border: 1px solid var(--border); border-radius: 20px; color: var(--text);
+    font-size: 13px; outline: none; width: 220px;
+  }
+  .search-box::placeholder { color: var(--muted); }
+  .search-box:focus { border-color: var(--gold); }
+
+  /* ── Table ── */
+  .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    background: var(--surface); padding: 12px 16px; text-align: left;
+    font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,.03); }
+  tbody td { padding: 14px 16px; vertical-align: top; }
+  .td-date { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .td-items { max-width: 260px; }
+  .td-items .items-line { color: var(--text); }
+  .td-items .items-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .td-zone { white-space: nowrap; }
+  .td-total { font-weight: 700; color: var(--gold); white-space: nowrap; }
+  .td-payment span { padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; letter-spacing: .5px; }
+  .pay-wompi { background: rgba(52,152,219,.15); color: var(--blue); }
+  .pay-wa { background: rgba(46,204,113,.12); color: var(--green); }
+  .td-notes { color: var(--muted); font-size: 12px; max-width: 180px; }
+  .td-actions { white-space: nowrap; }
+
+  /* Status badge */
+  .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .s-pendiente  { background: rgba(241,196,15,.12); color: var(--yellow); }
+  .s-confirmado { background: rgba(52,152,219,.12); color: var(--blue); }
+  .s-entregado  { background: rgba(46,204,113,.12); color: var(--green); }
+  .s-cancelado  { background: rgba(231,76,60,.12); color: var(--red); }
+
+  /* Action buttons */
+  .act-btn {
+    padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-size: 12px; cursor: pointer;
+    transition: all .2s; margin-right: 4px;
+  }
+  .act-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .act-btn.green:hover { border-color: var(--green); color: var(--green); }
+  .act-btn.red:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── Empty state ── */
+  .empty { text-align: center; padding: 60px; color: var(--muted); }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+  /* ── Loading ── */
+  .loading { text-align: center; padding: 60px; color: var(--muted); }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px; background: var(--card);
+    border: 1px solid var(--gold); color: var(--text); padding: 12px 20px;
+    border-radius: 10px; font-size: 14px; opacity: 0; transform: translateY(12px);
+    transition: all .3s; z-index: 9999; pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── Order detail modal ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75);
+    z-index: 200; align-items: center; justify-content: center; padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    width: 100%; max-width: 540px; padding: 32px; max-height: 90vh; overflow-y: auto;
+  }
+  .modal-title { font-size: 18px; color: var(--gold); margin-bottom: 20px; letter-spacing: 2px; }
+  .modal-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .modal-row:last-child { border-bottom: none; }
+  .modal-key { color: var(--muted); }
+  .modal-val { text-align: right; max-width: 60%; }
+  .modal-close {
+    width: 100%; margin-top: 20px; padding: 12px; background: transparent;
+    border: 1px solid var(--border); border-radius: 8px; color: var(--muted);
+    cursor: pointer; font-size: 14px; transition: all .2s;
+  }
+  .modal-close:hover { border-color: var(--gold); color: var(--gold); }
+
+  @media (max-width: 768px) {
+    .main { padding: 16px; }
+    table { display: block; overflow-x: auto; }
+    .search-box { width: 100%; margin-left: 0; }
+    .login-card { padding: 32px 24px; }
+    header { padding: 0 16px; }
+    .user-email { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Login ── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <h1>LUXÉ</h1>
+      <p>Panel de administración</p>
+    </div>
+    <div class="login-field">
+      <label>Correo</label>
+      <input type="email" id="login-email" placeholder="admin@luxe.com" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- ── App ── -->
+<div id="app">
+  <header>
+    <span class="header-brand">LUXÉ ADMIN</span>
+    <div class="header-right">
+      <span class="user-email" id="user-email"></span>
+      <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Pedidos hoy</div>
+        <div class="stat-value gold" id="stat-today">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pendientes</div>
+        <div class="stat-value yellow" id="stat-pending">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Entregados</div>
+        <div class="stat-value green" id="stat-delivered">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Ingresos totales</div>
+        <div class="stat-value gold" id="stat-revenue">—</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <button class="filter-btn active" onclick="setFilter('todos', this)">Todos</button>
+      <button class="filter-btn" onclick="setFilter('Pendiente', this)">Pendientes</button>
+      <button class="filter-btn" onclick="setFilter('Confirmado', this)">Confirmados</button>
+      <button class="filter-btn" onclick="setFilter('Entregado', this)">Entregados</button>
+      <button class="filter-btn" onclick="setFilter('Cancelado', this)">Cancelados</button>
+      <input class="search-box" type="text" id="search-input" placeholder="Buscar por zona, toppings..." oninput="renderTable()">
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <div class="loading" id="loading-state">Cargando pedidos...</div>
+      <div class="empty" id="empty-state" style="display:none">
+        <div class="empty-icon">📦</div>
+        <div>No hay pedidos con este filtro</div>
+      </div>
+      <table id="orders-table" style="display:none">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Pedido</th>
+            <th>Zona</th>
+            <th>Pago</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="orders-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Order detail modal -->
+<div class="modal-overlay" id="detail-modal" onclick="closeDetail(event)">
+  <div class="modal">
+    <div class="modal-title">Detalle del pedido</div>
+    <div id="detail-body"></div>
+    <button class="modal-close" onclick="closeDetailDirect()">Cerrar</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const firebaseConfig = {
+  apiKey:            "AIzaSyBawWvvwsnhEg_Rg-saJ_q-3IRr2BTFe6A",
+  authDomain:        "luxe-sweet-box-shop.firebaseapp.com",
+  projectId:         "luxe-sweet-box-shop",
+  storageBucket:     "luxe-sweet-box-shop.firebasestorage.app",
+  messagingSenderId: "581318544945",
+  appId:             "1:581318544945:web:36738d384c0826be35cf10"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+let allOrders   = [];
+let activeFilter = 'todos';
+let unsubscribe  = null;
+
+// ── Auth ──
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-email').textContent = user.email;
+    startListening();
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+  }
+});
+
+function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-err');
+  errEl.style.display = 'none';
+  auth.signInWithEmailAndPassword(email, pass).catch(e => {
+    errEl.textContent = 'Correo o contraseña incorrectos';
+    errEl.style.display = 'block';
+  });
+}
+
+function doLogout() { auth.signOut(); }
+
+document.getElementById('login-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+// ── Firestore live listener ──
+function startListening() {
+  unsubscribe = db.collection('orders')
+    .orderBy('createdAt', 'desc')
+    .onSnapshot(snap => {
+      allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      updateStats();
+      renderTable();
+    }, err => {
+      console.error(err);
+    });
+}
+
+// ── Stats ──
+function updateStats() {
+  const today = new Date().toISOString().slice(0, 10);
+  const todayOrders = allOrders.filter(o => o.date === today);
+  const pending   = allOrders.filter(o => o.status === 'Pendiente').length;
+  const delivered = allOrders.filter(o => o.status === 'Entregado').length;
+  const revenue   = allOrders.reduce((s, o) => s + (Number(o.total) || 0), 0);
+
+  document.getElementById('stat-today').textContent     = todayOrders.length;
+  document.getElementById('stat-pending').textContent   = pending;
+  document.getElementById('stat-delivered').textContent = delivered;
+  document.getElementById('stat-revenue').textContent   = '$ ' + revenue.toLocaleString('es-CO');
+}
+
+// ── Filter ──
+function setFilter(val, btn) {
+  activeFilter = val;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+function getFiltered() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  return allOrders.filter(o => {
+    const matchFilter = activeFilter === 'todos' || o.status === activeFilter;
+    const matchSearch = !q || [o.zone, o.toppings, o.salsas, o.addons, o.notes, o.name]
+      .some(v => (v || '').toLowerCase().includes(q));
+    return matchFilter && matchSearch;
+  });
+}
+
+// ── Render ──
+function renderTable() {
+  const filtered = getFiltered();
+  const loading  = document.getElementById('loading-state');
+  const empty    = document.getElementById('empty-state');
+  const table    = document.getElementById('orders-table');
+  const tbody    = document.getElementById('orders-body');
+
+  loading.style.display = 'none';
+
+  if (filtered.length === 0) {
+    empty.style.display  = 'block';
+    table.style.display  = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  table.style.display = 'table';
+
+  tbody.innerHTML = filtered.map(o => {
+    const ts = o.createdAt ? o.createdAt.toDate() : null;
+    const timeStr = ts ? ts.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : '';
+    const dateStr = o.date || '—';
+    const payClass = o.payment === 'Wómpi' ? 'pay-wompi' : 'pay-wa';
+    const payLabel = o.payment || '—';
+    const sClass = statusClass(o.status);
+    const totalStr = o.total ? '$ ' + Number(o.total).toLocaleString('es-CO') : '—';
+
+    return `<tr>
+      <td class="td-date">${dateStr}<br><span style="font-size:11px">${timeStr}</span></td>
+      <td class="td-items">
+        <div class="items-line">${o.toppings || '—'}</div>
+        <div class="items-sub">${o.salsas ? 'Salsas: ' + o.salsas : ''}</div>
+        ${o.addons ? '<div class="items-sub">+ ' + o.addons + '</div>' : ''}
+      </td>
+      <td class="td-zone">${o.zone || '—'}</td>
+      <td class="td-payment"><span class="${payClass}">${payLabel}</span></td>
+      <td class="td-total">${totalStr}</td>
+      <td><span class="status-badge ${sClass}">${o.status || '—'}</span></td>
+      <td class="td-actions">
+        <button class="act-btn" onclick="showDetail('${o.id}')">Ver</button>
+        ${o.status === 'Pendiente'  ? `<button class="act-btn green" onclick="setStatus('${o.id}','Confirmado')">Confirmar</button>` : ''}
+        ${o.status === 'Confirmado' ? `<button class="act-btn green" onclick="setStatus('${o.id}','Entregado')">Entregar</button>` : ''}
+        ${o.status === 'Entregado'  ? '' : `<button class="act-btn red" onclick="setStatus('${o.id}','Cancelado')">Cancelar</button>`}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function statusClass(s) {
+  return { Pendiente: 's-pendiente', Confirmado: 's-confirmado', Entregado: 's-entregado', Cancelado: 's-cancelado' }[s] || '';
+}
+
+// ── Update status ──
+async function setStatus(id, newStatus) {
+  try {
+    await db.collection('orders').doc(id).update({ status: newStatus });
+    showToast('Estado actualizado: ' + newStatus);
+  } catch (e) {
+    showToast('Error al actualizar');
+    console.error(e);
+  }
+}
+
+// ── Detail modal ──
+function showDetail(id) {
+  const o = allOrders.find(x => x.id === id);
+  if (!o) return;
+  const ts = o.createdAt ? o.createdAt.toDate().toLocaleString('es-CO') : '—';
+  const rows = [
+    ['Fecha / Hora', ts],
+    ['Estado', `<span class="status-badge ${statusClass(o.status)}">${o.status}</span>`],
+    ['Toppings', o.toppings || '—'],
+    ['Salsas', o.salsas || '—'],
+    ['Add-ons', o.addons || '—'],
+    ['Zona de entrega', o.zone || '—'],
+    ['Método de pago', o.payment || '—'],
+    ['Total', o.total ? '$ ' + Number(o.total).toLocaleString('es-CO') : '—'],
+    ['Notas', o.notes || '—'],
+    ['Fuente', o.source || '—'],
+    ['ID', `<span style="font-size:11px;color:var(--muted)">${o.id}</span>`],
+  ];
+  document.getElementById('detail-body').innerHTML = rows.map(([k, v]) =>
+    `<div class="modal-row"><span class="modal-key">${k}</span><span class="modal-val">${v}</span></div>`
+  ).join('');
+  document.getElementById('detail-modal').classList.add('open');
+}
+function closeDetail(e) { if (e.target === document.getElementById('detail-modal')) closeDetailDirect(); }
+function closeDetailDirect() { document.getElementById('detail-modal').classList.remove('open'); }
+
+// ── Toast ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

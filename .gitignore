@@ -1,0 +1,20 @@
+# Videos (too large for GitHub)
+*.mp4
+
+# Office documents (not part of the website)
+*.docx
+*.pdf
+*.py
+
+# Word temp lock files
+~$*
+
+# Internal tools (not public)
+admin-panel.html
+cuestionario-producto.html
+Luxe pitch tool.html
+Entregables/presentacion-reunion.html
+Entregables/generate_pdf.py
+
+# Claude internal config
+.claude/
