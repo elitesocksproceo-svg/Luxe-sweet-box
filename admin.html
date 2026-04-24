@@ -21,6 +21,7 @@
     --yellow: #F1C40F;
     --red: #E74C3C;
     --blue: #3498DB;
+    --purple: #9B59B6;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; }
@@ -65,6 +66,11 @@
   .header-brand { font-size: 18px; letter-spacing: 3px; color: var(--gold); font-weight: 300; }
   .header-right { display: flex; align-items: center; gap: 16px; }
   .user-email { font-size: 12px; color: var(--muted); }
+  .live-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+    box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
   .logout-btn {
     padding: 6px 14px; background: transparent; border: 1px solid var(--border);
     color: var(--muted); border-radius: 6px; font-size: 12px; cursor: pointer;
@@ -75,79 +81,145 @@
   .main { padding: 24px; max-width: 1400px; margin: 0 auto; }
 
   /* ── Stats ── */
-  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .stats-section { margin-bottom: 28px; }
+  .stats-label {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+  }
+  .stats-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
   .stat-card {
     background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-    padding: 20px 24px;
+    padding: 18px 20px; cursor: pointer; transition: all .2s; position: relative; overflow: hidden;
+    user-select: none;
   }
-  .stat-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
-  .stat-value { font-size: 32px; font-weight: 700; color: var(--text); line-height: 1; }
-  .stat-value.gold { color: var(--gold); }
-  .stat-value.green { color: var(--green); }
-  .stat-value.yellow { color: var(--yellow); }
+  .stat-card::before {
+    content: ''; position: absolute; inset: 0; opacity: 0;
+    transition: opacity .2s;
+  }
+  .stat-card:hover { border-color: #444; transform: translateY(-1px); }
+  .stat-card.active { border-color: var(--gold); background: rgba(201,168,76,.06); }
+  .stat-card.active::before { opacity: 1; }
+  .stat-card.s-pendiente:hover, .stat-card.s-pendiente.active  { border-color: var(--yellow); background: rgba(241,196,15,.06); }
+  .stat-card.s-confirmado:hover, .stat-card.s-confirmado.active { border-color: var(--blue); background: rgba(52,152,219,.06); }
+  .stat-card.s-entregado:hover, .stat-card.s-entregado.active  { border-color: var(--green); background: rgba(46,204,113,.06); }
+  .stat-card.s-cancelado:hover, .stat-card.s-cancelado.active  { border-color: var(--red); background: rgba(231,76,60,.06); }
+  .stat-label { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+  .stat-value { font-size: 30px; font-weight: 700; color: var(--text); line-height: 1; transition: color .3s; }
+  .stat-value.gold    { color: var(--gold); }
+  .stat-value.green   { color: var(--green); }
+  .stat-value.yellow  { color: var(--yellow); }
+  .stat-value.blue    { color: var(--blue); }
+  .stat-value.red     { color: var(--red); }
+  .stat-value.revenue { font-size: 18px; font-weight: 700; color: var(--gold); }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .stat-arrow { position: absolute; bottom: 14px; right: 16px; font-size: 10px; color: var(--muted); opacity: 0; transition: opacity .2s; }
+  .stat-card[data-filter]:hover .stat-arrow { opacity: 1; }
+
+  /* ── Revenue row ── */
+  .revenue-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .rev-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 20px; display: flex; align-items: center; gap: 16px;
+  }
+  .rev-icon { font-size: 24px; }
+  .rev-label { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
+  .rev-value { font-size: 20px; font-weight: 700; color: var(--gold); margin-top: 4px; }
 
   /* ── Filters ── */
-  .filters { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-  .filter-btn {
-    padding: 7px 18px; border-radius: 20px; border: 1px solid var(--border);
-    background: transparent; color: var(--muted); font-size: 13px; cursor: pointer;
-    transition: all .2s;
+  .filters-bar {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 14px;
   }
-  .filter-btn.active, .filter-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,.08); }
+  .filters-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; margin-right: 4px; }
+  .filter-btn {
+    padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-size: 12px; cursor: pointer;
+    transition: all .2s; display: flex; align-items: center; gap: 5px;
+  }
+  .filter-btn .fbadge {
+    background: rgba(255,255,255,.08); border-radius: 10px; padding: 1px 7px;
+    font-size: 10px; font-weight: 700; transition: all .2s;
+  }
+  .filter-btn.active, .filter-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .filter-btn.active .fbadge, .filter-btn:hover .fbadge { background: rgba(201,168,76,.15); }
+  .filter-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
   .search-box {
-    margin-left: auto; padding: 7px 14px; background: var(--card);
+    margin-left: auto; padding: 6px 14px; background: var(--surface);
     border: 1px solid var(--border); border-radius: 20px; color: var(--text);
-    font-size: 13px; outline: none; width: 220px;
+    font-size: 12px; outline: none; width: 200px; transition: all .2s;
   }
   .search-box::placeholder { color: var(--muted); }
-  .search-box:focus { border-color: var(--gold); }
+  .search-box:focus { border-color: var(--gold); width: 240px; }
 
   /* ── Table ── */
   .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .table-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .table-title { font-size: 12px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .table-count { font-size: 12px; color: var(--gold); }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   thead th {
-    background: var(--surface); padding: 12px 16px; text-align: left;
-    font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+    background: var(--surface); padding: 10px 16px; text-align: left;
+    font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
     color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap;
   }
   tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
   tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: rgba(255,255,255,.03); }
-  tbody td { padding: 14px 16px; vertical-align: top; }
+  tbody tr:hover { background: rgba(255,255,255,.025); }
+  tbody td { padding: 12px 16px; vertical-align: top; }
   .td-date { color: var(--muted); font-size: 12px; white-space: nowrap; }
   .td-items { max-width: 260px; }
   .td-items .items-line { color: var(--text); }
-  .td-items .items-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .td-items .items-sub { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .td-items .items-msg {
+    color: var(--gold); font-size: 11px; font-style: italic; margin-top: 4px;
+    display: flex; align-items: flex-start; gap: 4px; opacity: .9;
+  }
   .td-zone { white-space: nowrap; }
   .td-total { font-weight: 700; color: var(--gold); white-space: nowrap; }
-  .td-payment span { padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; letter-spacing: .5px; }
+  .td-payment span { padding: 3px 9px; border-radius: 10px; font-size: 11px; font-weight: 600; letter-spacing: .5px; }
   .pay-wompi { background: rgba(52,152,219,.15); color: var(--blue); }
-  .pay-wa { background: rgba(46,204,113,.12); color: var(--green); }
-  .td-notes { color: var(--muted); font-size: 12px; max-width: 180px; }
+  .pay-wa    { background: rgba(46,204,113,.12); color: var(--green); }
+  .td-notes  { color: var(--muted); font-size: 12px; max-width: 180px; }
   .td-actions { white-space: nowrap; }
 
   /* Status badge */
-  .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-  .s-pendiente  { background: rgba(241,196,15,.12); color: var(--yellow); }
-  .s-confirmado { background: rgba(52,152,219,.12); color: var(--blue); }
-  .s-entregado  { background: rgba(46,204,113,.12); color: var(--green); }
-  .s-cancelado  { background: rgba(231,76,60,.12); color: var(--red); }
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+  .s-pendiente  { background: rgba(241,196,15,.12);  color: var(--yellow); }
+  .s-confirmado { background: rgba(52,152,219,.12);  color: var(--blue); }
+  .s-entregado  { background: rgba(46,204,113,.12);  color: var(--green); }
+  .s-cancelado  { background: rgba(231,76,60,.12);   color: var(--red); }
 
   /* Action buttons */
   .act-btn {
-    padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
-    background: transparent; color: var(--muted); font-size: 12px; cursor: pointer;
-    transition: all .2s; margin-right: 4px;
+    padding: 4px 11px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-size: 11px; cursor: pointer;
+    transition: all .2s; margin-right: 4px; white-space: nowrap;
   }
-  .act-btn:hover { border-color: var(--gold); color: var(--gold); }
-  .act-btn.green:hover { border-color: var(--green); color: var(--green); }
-  .act-btn.red:hover { border-color: var(--red); color: var(--red); }
+  .act-btn:hover            { border-color: var(--gold); color: var(--gold); }
+  .act-btn.green:hover      { border-color: var(--green); color: var(--green); }
+  .act-btn.red:hover        { border-color: var(--red); color: var(--red); }
 
-  /* ── Empty state ── */
+  /* ── Empty / Loading ── */
   .empty { text-align: center; padding: 60px; color: var(--muted); }
   .empty-icon { font-size: 48px; margin-bottom: 12px; }
-
-  /* ── Loading ── */
   .loading { text-align: center; padding: 60px; color: var(--muted); }
 
   /* ── Toast ── */
@@ -167,27 +239,55 @@
   .modal-overlay.open { display: flex; }
   .modal {
     background: var(--card); border: 1px solid var(--border); border-radius: 16px;
-    width: 100%; max-width: 540px; padding: 32px; max-height: 90vh; overflow-y: auto;
+    width: 100%; max-width: 560px; padding: 32px; max-height: 90vh; overflow-y: auto;
   }
-  .modal-title { font-size: 18px; color: var(--gold); margin-bottom: 20px; letter-spacing: 2px; }
+  .modal-title { font-size: 17px; color: var(--gold); margin-bottom: 20px; letter-spacing: 2px; }
+
+  /* Mensaje highlight block in modal */
+  .modal-mensaje {
+    background: rgba(201,168,76,.06); border: 1px solid rgba(201,168,76,.25);
+    border-radius: 10px; padding: 16px 18px; margin-bottom: 20px;
+  }
+  .modal-mensaje-label {
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold);
+    margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+  }
+  .modal-mensaje-text {
+    font-size: 15px; font-style: italic; color: var(--text); line-height: 1.6;
+  }
+  .modal-mensaje-empty { font-size: 13px; color: var(--muted); font-style: italic; }
+
   .modal-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
-  .modal-row:last-child { border-bottom: none; }
-  .modal-key { color: var(--muted); }
-  .modal-val { text-align: right; max-width: 60%; }
+  .modal-row:last-of-type { border-bottom: none; }
+  .modal-key { color: var(--muted); flex-shrink: 0; margin-right: 16px; }
+  .modal-val { text-align: right; max-width: 65%; word-break: break-word; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+  .modal-act-btn {
+    flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); cursor: pointer; font-size: 13px;
+    transition: all .2s; text-align: center; min-width: 100px;
+  }
+  .modal-act-btn:hover             { border-color: var(--gold); color: var(--gold); }
+  .modal-act-btn.confirm:hover     { border-color: var(--blue); color: var(--blue); }
+  .modal-act-btn.deliver:hover     { border-color: var(--green); color: var(--green); }
+  .modal-act-btn.cancel:hover      { border-color: var(--red); color: var(--red); }
   .modal-close {
-    width: 100%; margin-top: 20px; padding: 12px; background: transparent;
+    width: 100%; margin-top: 12px; padding: 12px; background: transparent;
     border: 1px solid var(--border); border-radius: 8px; color: var(--muted);
     cursor: pointer; font-size: 14px; transition: all .2s;
   }
   .modal-close:hover { border-color: var(--gold); color: var(--gold); }
 
   @media (max-width: 768px) {
-    .main { padding: 16px; }
+    .main { padding: 12px; }
     table { display: block; overflow-x: auto; }
     .search-box { width: 100%; margin-left: 0; }
     .login-card { padding: 32px 24px; }
     header { padding: 0 16px; }
     .user-email { display: none; }
+    .revenue-grid { grid-template-columns: 1fr; }
+    .filters-bar { gap: 6px; }
+    .search-box { order: -1; width: 100%; }
   }
 </style>
 </head>
@@ -216,7 +316,10 @@
 <!-- ── App ── -->
 <div id="app">
   <header>
-    <span class="header-brand">LUXÉ ADMIN</span>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="header-brand">LUXÉ ADMIN</span>
+      <span class="live-dot" title="En vivo"></span>
+    </div>
     <div class="header-right">
       <span class="user-email" id="user-email"></span>
       <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
@@ -224,38 +327,87 @@
   </header>
 
   <div class="main">
-    <!-- Stats -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Pedidos hoy</div>
-        <div class="stat-value gold" id="stat-today">—</div>
+
+    <!-- Stats section -->
+    <div class="stats-section">
+      <div class="stats-label">Resumen de pedidos</div>
+      <div class="stats-grid">
+
+        <!-- Total — no filter, just info -->
+        <div class="stat-card" id="sc-todos" data-filter="todos" onclick="setFilterFromCard('todos', this)">
+          <div class="stat-label">Total pedidos</div>
+          <div class="stat-value gold" id="stat-total">—</div>
+          <div class="stat-sub" id="stat-total-sub"></div>
+          <span class="stat-arrow">Ver todos →</span>
+        </div>
+
+        <div class="stat-card s-pendiente" id="sc-pendiente" data-filter="Pendiente" onclick="setFilterFromCard('Pendiente', this)">
+          <div class="stat-label">Pendientes</div>
+          <div class="stat-value yellow" id="stat-pending">—</div>
+          <div class="stat-sub" id="stat-pending-sub">Esperando confirmación</div>
+          <span class="stat-arrow">Filtrar →</span>
+        </div>
+
+        <div class="stat-card s-confirmado" id="sc-confirmado" data-filter="Confirmado" onclick="setFilterFromCard('Confirmado', this)">
+          <div class="stat-label">Confirmados</div>
+          <div class="stat-value blue" id="stat-confirmed">—</div>
+          <div class="stat-sub" id="stat-confirmed-sub">En preparación</div>
+          <span class="stat-arrow">Filtrar →</span>
+        </div>
+
+        <div class="stat-card s-entregado" id="sc-entregado" data-filter="Entregado" onclick="setFilterFromCard('Entregado', this)">
+          <div class="stat-label">Entregados</div>
+          <div class="stat-value green" id="stat-delivered">—</div>
+          <div class="stat-sub" id="stat-delivered-sub">Completados</div>
+          <span class="stat-arrow">Filtrar →</span>
+        </div>
+
+        <div class="stat-card s-cancelado" id="sc-cancelado" data-filter="Cancelado" onclick="setFilterFromCard('Cancelado', this)">
+          <div class="stat-label">Cancelados</div>
+          <div class="stat-value red" id="stat-cancelled">—</div>
+          <div class="stat-sub" id="stat-cancelled-sub"></div>
+          <span class="stat-arrow">Filtrar →</span>
+        </div>
+
       </div>
-      <div class="stat-card">
-        <div class="stat-label">Pendientes</div>
-        <div class="stat-value yellow" id="stat-pending">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Entregados</div>
-        <div class="stat-value green" id="stat-delivered">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Ingresos totales</div>
-        <div class="stat-value gold" id="stat-revenue">—</div>
+
+      <!-- Revenue row -->
+      <div class="revenue-grid">
+        <div class="rev-card">
+          <span class="rev-icon">💰</span>
+          <div>
+            <div class="rev-label">Ingresos totales</div>
+            <div class="rev-value" id="stat-revenue">—</div>
+          </div>
+        </div>
+        <div class="rev-card">
+          <span class="rev-icon">📅</span>
+          <div>
+            <div class="rev-label">Ingresos hoy</div>
+            <div class="rev-value" id="stat-today-rev">—</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Filters -->
-    <div class="filters">
-      <button class="filter-btn active" onclick="setFilter('todos', this)">Todos</button>
-      <button class="filter-btn" onclick="setFilter('Pendiente', this)">Pendientes</button>
-      <button class="filter-btn" onclick="setFilter('Confirmado', this)">Confirmados</button>
-      <button class="filter-btn" onclick="setFilter('Entregado', this)">Entregados</button>
-      <button class="filter-btn" onclick="setFilter('Cancelado', this)">Cancelados</button>
-      <input class="search-box" type="text" id="search-input" placeholder="Buscar por zona, toppings..." oninput="renderTable()">
+    <!-- Filters bar -->
+    <div class="filters-bar">
+      <span class="filters-label">Filtro:</span>
+      <button class="filter-btn active" data-filter="todos"      onclick="setFilter('todos', this)">Todos <span class="fbadge" id="fb-todos">0</span></button>
+      <button class="filter-btn"        data-filter="Pendiente"  onclick="setFilter('Pendiente', this)">Pendientes <span class="fbadge" id="fb-pendiente">0</span></button>
+      <button class="filter-btn"        data-filter="Confirmado" onclick="setFilter('Confirmado', this)">Confirmados <span class="fbadge" id="fb-confirmado">0</span></button>
+      <button class="filter-btn"        data-filter="Entregado"  onclick="setFilter('Entregado', this)">Entregados <span class="fbadge" id="fb-entregado">0</span></button>
+      <button class="filter-btn"        data-filter="Cancelado"  onclick="setFilter('Cancelado', this)">Cancelados <span class="fbadge" id="fb-cancelado">0</span></button>
+      <span class="filter-sep"></span>
+      <input class="search-box" type="text" id="search-input" placeholder="🔍  Buscar pedido..." oninput="renderTable()">
     </div>
 
     <!-- Table -->
     <div class="table-wrap">
+      <div class="table-header">
+        <span class="table-title">Pedidos</span>
+        <span class="table-count" id="table-count-label">—</span>
+      </div>
       <div class="loading" id="loading-state">Cargando pedidos...</div>
       <div class="empty" id="empty-state" style="display:none">
         <div class="empty-icon">📦</div>
@@ -282,8 +434,9 @@
 <!-- Order detail modal -->
 <div class="modal-overlay" id="detail-modal" onclick="closeDetail(event)">
   <div class="modal">
-    <div class="modal-title">Detalle del pedido</div>
+    <div class="modal-title">💌 Detalle del pedido</div>
     <div id="detail-body"></div>
+    <div id="detail-actions" class="modal-actions"></div>
     <button class="modal-close" onclick="closeDetailDirect()">Cerrar</button>
   </div>
 </div>
@@ -303,9 +456,10 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-let allOrders   = [];
+let allOrders    = [];
 let activeFilter = 'todos';
 let unsubscribe  = null;
+let currentDetailId = null;
 
 // ── Auth ──
 auth.onAuthStateChanged(user => {
@@ -326,7 +480,7 @@ function doLogin() {
   const pass  = document.getElementById('login-pass').value;
   const errEl = document.getElementById('login-err');
   errEl.style.display = 'none';
-  auth.signInWithEmailAndPassword(email, pass).catch(e => {
+  auth.signInWithEmailAndPassword(email, pass).catch(() => {
     errEl.textContent = 'Correo o contraseña incorrectos';
     errEl.style.display = 'block';
   });
@@ -346,30 +500,91 @@ function startListening() {
       allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       updateStats();
       renderTable();
-    }, err => {
-      console.error(err);
-    });
+      // Refresh open modal if any
+      if (currentDetailId) {
+        const still = allOrders.find(x => x.id === currentDetailId);
+        if (still) renderDetailBody(still);
+      }
+    }, err => console.error(err));
 }
 
-// ── Stats ──
+// ── Stats — always reflect ALL orders (global KPIs) ──
 function updateStats() {
-  const today = new Date().toISOString().slice(0, 10);
-  const todayOrders = allOrders.filter(o => o.date === today);
-  const pending   = allOrders.filter(o => o.status === 'Pendiente').length;
+  const today   = new Date().toISOString().slice(0, 10);
+  const total   = allOrders.length;
+  const pending = allOrders.filter(o => o.status === 'Pendiente').length;
+  const confirmed = allOrders.filter(o => o.status === 'Confirmado').length;
   const delivered = allOrders.filter(o => o.status === 'Entregado').length;
-  const revenue   = allOrders.reduce((s, o) => s + (Number(o.total) || 0), 0);
+  const cancelled = allOrders.filter(o => o.status === 'Cancelado').length;
+  const todayCount = allOrders.filter(o => o.date === today).length;
+  const revenue  = allOrders.reduce((s, o) => s + (Number(o.total) || 0), 0);
+  const todayRev = allOrders.filter(o => o.date === today)
+                            .reduce((s, o) => s + (Number(o.total) || 0), 0);
 
-  document.getElementById('stat-today').textContent     = todayOrders.length;
-  document.getElementById('stat-pending').textContent   = pending;
-  document.getElementById('stat-delivered').textContent = delivered;
-  document.getElementById('stat-revenue').textContent   = '$ ' + revenue.toLocaleString('es-CO');
+  animateNumber('stat-total',     total);
+  animateNumber('stat-pending',   pending);
+  animateNumber('stat-confirmed', confirmed);
+  animateNumber('stat-delivered', delivered);
+  animateNumber('stat-cancelled', cancelled);
+
+  document.getElementById('stat-total-sub').textContent     = todayCount ? todayCount + ' hoy' : '';
+  document.getElementById('stat-cancelled-sub').textContent = cancelled
+    ? Math.round(cancelled / (total || 1) * 100) + '% del total'
+    : '';
+
+  document.getElementById('stat-revenue').textContent     = '$ ' + revenue.toLocaleString('es-CO');
+  document.getElementById('stat-today-rev').textContent   = '$ ' + todayRev.toLocaleString('es-CO');
+
+  // Update filter badge counts
+  document.getElementById('fb-todos').textContent      = total;
+  document.getElementById('fb-pendiente').textContent  = pending;
+  document.getElementById('fb-confirmado').textContent = confirmed;
+  document.getElementById('fb-entregado').textContent  = delivered;
+  document.getElementById('fb-cancelado').textContent  = cancelled;
 }
 
-// ── Filter ──
+// Animate counter from current to target
+const _nums = {};
+function animateNumber(id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const current = parseInt(el.textContent) || 0;
+  if (current === target) return;
+  const step = target > current ? 1 : -1;
+  const steps = Math.min(Math.abs(target - current), 20);
+  const inc = Math.ceil(Math.abs(target - current) / steps);
+  let val = current;
+  clearInterval(_nums[id]);
+  _nums[id] = setInterval(() => {
+    val += step * inc;
+    if ((step > 0 && val >= target) || (step < 0 && val <= target)) {
+      val = target;
+      clearInterval(_nums[id]);
+    }
+    el.textContent = val;
+  }, 30);
+}
+
+// ── Filter from stat card ──
+function setFilterFromCard(val, card) {
+  // Find matching filter button
+  const btn = document.querySelector(`.filter-btn[data-filter="${val}"]`);
+  if (btn) setFilter(val, btn);
+}
+
+// ── Filter from button ──
 function setFilter(val, btn) {
   activeFilter = val;
+
+  // Update filter buttons
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+
+  // Update stat card active state
+  document.querySelectorAll('.stat-card[data-filter]').forEach(c => c.classList.remove('active'));
+  const activeCard = document.getElementById('sc-' + val.toLowerCase());
+  if (activeCard) activeCard.classList.add('active');
+
   renderTable();
 }
 
@@ -377,29 +592,33 @@ function getFiltered() {
   const q = document.getElementById('search-input').value.toLowerCase();
   return allOrders.filter(o => {
     const matchFilter = activeFilter === 'todos' || o.status === activeFilter;
-    const matchSearch = !q || [o.zone, o.toppings, o.salsas, o.addons, o.notes, o.name]
+    const matchSearch = !q || [o.zone, o.toppings, o.salsas, o.addons, o.notes, o.name, o.mensaje]
       .some(v => (v || '').toLowerCase().includes(q));
     return matchFilter && matchSearch;
   });
 }
 
-// ── Render ──
+// ── Render table ──
 function renderTable() {
   const filtered = getFiltered();
   const loading  = document.getElementById('loading-state');
   const empty    = document.getElementById('empty-state');
   const table    = document.getElementById('orders-table');
   const tbody    = document.getElementById('orders-body');
+  const countLbl = document.getElementById('table-count-label');
 
   loading.style.display = 'none';
 
   if (filtered.length === 0) {
-    empty.style.display  = 'block';
-    table.style.display  = 'none';
+    empty.style.display = 'block';
+    table.style.display = 'none';
+    countLbl.textContent = '0 pedidos';
     return;
   }
+
   empty.style.display = 'none';
   table.style.display = 'table';
+  countLbl.textContent = filtered.length + ' pedido' + (filtered.length !== 1 ? 's' : '');
 
   tbody.innerHTML = filtered.map(o => {
     const ts = o.createdAt ? o.createdAt.toDate() : null;
@@ -407,35 +626,47 @@ function renderTable() {
     const dateStr = o.date || '—';
     const payClass = o.payment === 'Wómpi' ? 'pay-wompi' : 'pay-wa';
     const payLabel = o.payment || '—';
-    const sClass = statusClass(o.status);
+    const sClass   = statusClass(o.status);
     const totalStr = o.total ? '$ ' + Number(o.total).toLocaleString('es-CO') : '—';
+    const msgHtml  = o.mensaje
+      ? `<div class="items-msg">💌 <em>${escHtml(o.mensaje)}</em></div>`
+      : '';
 
     return `<tr>
       <td class="td-date">${dateStr}<br><span style="font-size:11px">${timeStr}</span></td>
       <td class="td-items">
-        <div class="items-line">${o.toppings || '—'}</div>
-        <div class="items-sub">${o.salsas ? 'Salsas: ' + o.salsas : ''}</div>
-        ${o.addons ? '<div class="items-sub">+ ' + o.addons + '</div>' : ''}
+        <div class="items-line">${escHtml(o.toppings || '—')}</div>
+        ${o.salsas  ? `<div class="items-sub">Salsas: ${escHtml(o.salsas)}</div>` : ''}
+        ${o.addons  ? `<div class="items-sub">+ ${escHtml(o.addons)}</div>` : ''}
+        ${msgHtml}
       </td>
-      <td class="td-zone">${o.zone || '—'}</td>
-      <td class="td-payment"><span class="${payClass}">${payLabel}</span></td>
+      <td class="td-zone">${escHtml(o.zone || '—')}</td>
+      <td class="td-payment"><span class="${payClass}">${escHtml(payLabel)}</span></td>
       <td class="td-total">${totalStr}</td>
       <td><span class="status-badge ${sClass}">${o.status || '—'}</span></td>
       <td class="td-actions">
         <button class="act-btn" onclick="showDetail('${o.id}')">Ver</button>
         ${o.status === 'Pendiente'  ? `<button class="act-btn green" onclick="setStatus('${o.id}','Confirmado')">Confirmar</button>` : ''}
         ${o.status === 'Confirmado' ? `<button class="act-btn green" onclick="setStatus('${o.id}','Entregado')">Entregar</button>` : ''}
-        ${o.status === 'Entregado'  ? '' : `<button class="act-btn red" onclick="setStatus('${o.id}','Cancelado')">Cancelar</button>`}
+        ${o.status !== 'Entregado' && o.status !== 'Cancelado' ? `<button class="act-btn red" onclick="setStatus('${o.id}','Cancelado')">Cancelar</button>` : ''}
       </td>
     </tr>`;
   }).join('');
 }
 
-function statusClass(s) {
-  return { Pendiente: 's-pendiente', Confirmado: 's-confirmado', Entregado: 's-entregado', Cancelado: 's-cancelado' }[s] || '';
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
 }
 
-// ── Update status ──
+function statusClass(s) {
+  return { Pendiente:'s-pendiente', Confirmado:'s-confirmado', Entregado:'s-entregado', Cancelado:'s-cancelado' }[s] || '';
+}
+
+// ── Update status (triggers Firestore → listener → stats + table auto-refresh) ──
 async function setStatus(id, newStatus) {
   try {
     await db.collection('orders').doc(id).update({ status: newStatus });
@@ -450,27 +681,61 @@ async function setStatus(id, newStatus) {
 function showDetail(id) {
   const o = allOrders.find(x => x.id === id);
   if (!o) return;
-  const ts = o.createdAt ? o.createdAt.toDate().toLocaleString('es-CO') : '—';
-  const rows = [
-    ['Fecha / Hora', ts],
-    ['Estado', `<span class="status-badge ${statusClass(o.status)}">${o.status}</span>`],
-    ['Toppings', o.toppings || '—'],
-    ['Salsas', o.salsas || '—'],
-    ['Add-ons', o.addons || '—'],
-    ['Zona de entrega', o.zone || '—'],
-    ['Método de pago', o.payment || '—'],
-    ['Total', o.total ? '$ ' + Number(o.total).toLocaleString('es-CO') : '—'],
-    ['Notas', o.notes || '—'],
-    ['Fuente', o.source || '—'],
-    ['ID', `<span style="font-size:11px;color:var(--muted)">${o.id}</span>`],
-  ];
-  document.getElementById('detail-body').innerHTML = rows.map(([k, v]) =>
-    `<div class="modal-row"><span class="modal-key">${k}</span><span class="modal-val">${v}</span></div>`
-  ).join('');
+  currentDetailId = id;
+  renderDetailBody(o);
   document.getElementById('detail-modal').classList.add('open');
 }
-function closeDetail(e) { if (e.target === document.getElementById('detail-modal')) closeDetailDirect(); }
-function closeDetailDirect() { document.getElementById('detail-modal').classList.remove('open'); }
+
+function renderDetailBody(o) {
+  const ts = o.createdAt ? o.createdAt.toDate().toLocaleString('es-CO') : '—';
+
+  // Mensaje block
+  const mensajeHtml = `
+    <div class="modal-mensaje">
+      <div class="modal-mensaje-label">💌 Mensaje para quien recibe</div>
+      ${o.mensaje
+        ? `<div class="modal-mensaje-text">"${escHtml(o.mensaje)}"</div>`
+        : `<div class="modal-mensaje-empty">Sin mensaje personalizado</div>`}
+    </div>`;
+
+  const rows = [
+    ['Fecha / Hora',    ts],
+    ['Estado',          `<span class="status-badge ${statusClass(o.status)}">${o.status || '—'}</span>`],
+    ['Toppings',        escHtml(o.toppings || '—')],
+    ['Salsas',          escHtml(o.salsas   || '—')],
+    ['Add-ons',         escHtml(o.addons   || 'Ninguno')],
+    ['Zona de entrega', escHtml(o.zone     || '—')],
+    ['Método de pago',  escHtml(o.payment  || '—')],
+    ['Total',           o.total ? '$ ' + Number(o.total).toLocaleString('es-CO') : '—'],
+    ['Notas',           escHtml(o.notes    || '—')],
+    ['Fuente',          escHtml(o.source   || '—')],
+    ['ID',              `<span style="font-size:11px;color:var(--muted)">${o.id}</span>`],
+  ];
+
+  document.getElementById('detail-body').innerHTML =
+    mensajeHtml +
+    rows.map(([k, v]) =>
+      `<div class="modal-row"><span class="modal-key">${k}</span><span class="modal-val">${v}</span></div>`
+    ).join('');
+
+  // Action buttons inside modal
+  const actionsEl = document.getElementById('detail-actions');
+  let actHtml = '';
+  if (o.status === 'Pendiente')  actHtml += `<button class="modal-act-btn confirm" onclick="setStatus('${o.id}','Confirmado');closeDetailDirect()">Confirmar</button>`;
+  if (o.status === 'Confirmado') actHtml += `<button class="modal-act-btn deliver" onclick="setStatus('${o.id}','Entregado');closeDetailDirect()">Marcar entregado</button>`;
+  if (o.status !== 'Entregado' && o.status !== 'Cancelado') {
+    actHtml += `<button class="modal-act-btn cancel" onclick="setStatus('${o.id}','Cancelado');closeDetailDirect()">Cancelar pedido</button>`;
+  }
+  actionsEl.innerHTML = actHtml;
+}
+
+function closeDetail(e) {
+  if (e.target === document.getElementById('detail-modal')) closeDetailDirect();
+}
+function closeDetailDirect() {
+  document.getElementById('detail-modal').classList.remove('open');
+  currentDetailId = null;
+}
 
 // ── Toast ──
 function showToast(msg) {

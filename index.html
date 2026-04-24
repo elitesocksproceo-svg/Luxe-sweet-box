@@ -1191,7 +1191,8 @@ async function handleWompiPayment() {
     addons: addonList.join(', '),
     zone: deliveryName,
     total: total,
-    ref: ref
+    ref: ref,
+    mensaje: document.getElementById('msg-ta').value.trim()
   }));
   window.location.href = 'https://checkout.wompi.co/p/?' + params.toString();
 }
@@ -1220,6 +1221,7 @@ async function sha256(message) {
       salsas:    pending ? pending.salsas   : '',
       addons:    pending ? pending.addons   : '',
       zone:      pending ? pending.zone     : '',
+      mensaje:   pending ? (pending.mensaje || '') : '',
       payment:   'Wómpi',
       total:     pending ? pending.total    : 0,
       status:    'Confirmado',
@@ -1268,6 +1270,7 @@ document.getElementById('btn-wa-order').addEventListener('click', async function
     salsas:    selectedSals.join(', '),
     addons:    waAddons.join(', '),
     zone:      deliveryName,
+    mensaje:   document.getElementById('msg-ta').value.trim(),
     payment:   'WhatsApp',
     total:     deliveryExternal ? 0 : getTotal(),
     status:    'Pendiente',
