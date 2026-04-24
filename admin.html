@@ -259,6 +259,8 @@
 
   .modal-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
   .modal-row:last-of-type { border-bottom: none; }
+  .modal-row.section-head { padding: 14px 0 4px; border-bottom: none; }
+  .modal-row.section-head .modal-key { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
   .modal-key { color: var(--muted); flex-shrink: 0; margin-right: 16px; }
   .modal-val { text-align: right; max-width: 65%; word-break: break-word; }
   .modal-actions { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
@@ -699,24 +701,35 @@ function renderDetailBody(o) {
     </div>`;
 
   const rows = [
-    ['Fecha / Hora',    ts],
-    ['Estado',          `<span class="status-badge ${statusClass(o.status)}">${o.status || '—'}</span>`],
-    ['Toppings',        escHtml(o.toppings || '—')],
-    ['Salsas',          escHtml(o.salsas   || '—')],
-    ['Add-ons',         escHtml(o.addons   || 'Ninguno')],
-    ['Zona de entrega', escHtml(o.zone     || '—')],
-    ['Método de pago',  escHtml(o.payment  || '—')],
-    ['Total',           o.total ? '$ ' + Number(o.total).toLocaleString('es-CO') : '—'],
-    ['Notas',           escHtml(o.notes    || '—')],
-    ['Fuente',          escHtml(o.source   || '—')],
-    ['ID',              `<span style="font-size:11px;color:var(--muted)">${o.id}</span>`],
+    ['Fecha / Hora',       ts],
+    ['Estado',             `<span class="status-badge ${statusClass(o.status)}">${o.status || '—'}</span>`],
+    ['Toppings',           escHtml(o.toppings || '—')],
+    ['Salsas',             escHtml(o.salsas   || '—')],
+    ['Add-ons',            escHtml(o.addons   || 'Ninguno')],
+    ['— Entrega —',        ''],
+    ['Nombre',             escHtml(o.name     || '—')],
+    ['Teléfono',           escHtml(o.phone    || '—')],
+    ['Dirección',          escHtml(o.address  || '—')],
+    ['Barrio',             escHtml(o.barrio   || '—')],
+    ['Fecha entrega',      escHtml(o.deliveryDate || '—')],
+    ['Hora preferida',     escHtml(o.deliveryTime || 'Cualquier hora')],
+    ['Nota domiciliario',  escHtml(o.deliveryNote || '—')],
+    ['— Pago —',           ''],
+    ['Zona',               escHtml(o.zone     || '—')],
+    ['Método de pago',     escHtml(o.payment  || '—')],
+    ['Total',              o.total ? '$ ' + Number(o.total).toLocaleString('es-CO') : '—'],
+    ['Notas internas',     escHtml(o.notes    || '—')],
+    ['ID',                 `<span style="font-size:11px;color:var(--muted)">${o.id}</span>`],
   ];
 
   document.getElementById('detail-body').innerHTML =
     mensajeHtml +
-    rows.map(([k, v]) =>
-      `<div class="modal-row"><span class="modal-key">${k}</span><span class="modal-val">${v}</span></div>`
-    ).join('');
+    rows.map(([k, v]) => {
+      const isHead = k.startsWith('—') && k.endsWith('—');
+      return isHead
+        ? `<div class="modal-row section-head"><span class="modal-key">${k.replace(/—/g,'').trim()}</span></div>`
+        : `<div class="modal-row"><span class="modal-key">${k}</span><span class="modal-val">${v}</span></div>`;
+    }).join('');
 
   // Action buttons inside modal
   const actionsEl = document.getElementById('detail-actions');
