@@ -21,7 +21,6 @@
     --yellow: #F1C40F;
     --red: #E74C3C;
     --blue: #3498DB;
-    --purple: #9B59B6;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; }
@@ -77,6 +76,19 @@
     transition: all .2s;
   }
   .logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── Motivational banner ── */
+  .team-banner {
+    background: linear-gradient(90deg, rgba(201,168,76,.07) 0%, rgba(201,168,76,.03) 100%);
+    border-bottom: 1px solid rgba(201,168,76,.14);
+    padding: 9px 24px;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--muted);
+    letter-spacing: .4px;
+    font-style: italic;
+  }
+  .team-banner strong { color: var(--gold); font-style: normal; font-weight: 600; }
 
   .main { padding: 24px; max-width: 1400px; margin: 0 auto; }
 
@@ -327,6 +339,9 @@
       <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
     </div>
   </header>
+  <div class="team-banner">
+    Detrás de cada número aquí hay alguien esperando una sonrisa. <strong>Eso es lo que mueve a Luxé.</strong>
+  </div>
 
   <div class="main">
 
@@ -594,10 +609,22 @@ function getFiltered() {
   const q = document.getElementById('search-input').value.toLowerCase();
   return allOrders.filter(o => {
     const matchFilter = activeFilter === 'todos' || o.status === activeFilter;
-    const matchSearch = !q || [o.zone, o.toppings, o.salsas, o.addons, o.notes, o.name, o.mensaje]
+    const matchSearch = !q || [o.zone, o.toppings, o.salsas, o.addons, o.notes, o.name, o.mensaje, o.clientName, o.clientPhone, o.address, o.barrio]
       .some(v => (v || '').toLowerCase().includes(q));
     return matchFilter && matchSearch;
   });
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function statusClass(s) {
+  return { Pendiente:'s-pendiente', Confirmado:'s-confirmado', Entregado:'s-entregado', Cancelado:'s-cancelado' }[s] || '';
 }
 
 // ── Render table ──
@@ -640,6 +667,8 @@ function renderTable() {
         <div class="items-line">${escHtml(o.toppings || '—')}</div>
         ${o.salsas  ? `<div class="items-sub">Salsas: ${escHtml(o.salsas)}</div>` : ''}
         ${o.addons  ? `<div class="items-sub">+ ${escHtml(o.addons)}</div>` : ''}
+        ${o.clientName  ? `<div class="items-sub" style="color:var(--text);margin-top:5px">👤 ${escHtml(o.clientName)}</div>` : ''}
+        ${o.clientPhone ? `<div class="items-sub">📞 ${escHtml(o.clientPhone)}</div>` : ''}
         ${msgHtml}
       </td>
       <td class="td-zone">${escHtml(o.zone || '—')}</td>
@@ -654,18 +683,6 @@ function renderTable() {
       </td>
     </tr>`;
   }).join('');
-}
-
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
-}
-
-function statusClass(s) {
-  return { Pendiente:'s-pendiente', Confirmado:'s-confirmado', Entregado:'s-entregado', Cancelado:'s-cancelado' }[s] || '';
 }
 
 // ── Update status (triggers Firestore → listener → stats + table auto-refresh) ──
@@ -707,8 +724,8 @@ function renderDetailBody(o) {
     ['Salsas',             escHtml(o.salsas   || '—')],
     ['Add-ons',            escHtml(o.addons   || 'Ninguno')],
     ['— Entrega —',        ''],
-    ['Nombre',             escHtml(o.name     || '—')],
-    ['Teléfono',           escHtml(o.phone    || '—')],
+    ['Nombre',             escHtml(o.clientName  || o.name  || '—')],
+    ['Teléfono',           escHtml(o.clientPhone || o.phone || '—')],
     ['Dirección',          escHtml(o.address  || '—')],
     ['Barrio',             escHtml(o.barrio   || '—')],
     ['Fecha entrega',      escHtml(o.deliveryDate || '—')],
